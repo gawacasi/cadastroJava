@@ -2,192 +2,226 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-class Usuario {
-    private String nome;
-    private String email;
-    private String senha;
-    private double saldo;
+interface OperacoesBancarias {
+    void depositar(double valor);
+    void sacar(double valor);
+    double consultarSaldo();
+}
 
-    public Usuario(String nome, String email, String senha) {
-        setNome(nome);
-        setEmail(email);
-        setSenha(senha);
+class Conta {
+    private String titular;
+    public double saldo;
+
+    public Conta(String titular) {
+        this.titular = titular;
         this.saldo = 0.0;
     }
 
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        if (nome != null && !nome.trim().isEmpty()) {
-            this.nome = nome.trim();
-        } else {
-            throw new IllegalArgumentException("Nome inválido");
-        }
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        if (validarEmail(email)) {
-            this.email = email;
-        } else {
-            throw new IllegalArgumentException("Email inválido");
-        }
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        if (senha != null && !senha.trim().isEmpty()) {
-            this.senha = senha;
-        } else {
-            throw new IllegalArgumentException("Senha inválida");
-        }
+    public String getTitular() {
+        return titular;
     }
 
     public double getSaldo() {
         return saldo;
     }
 
-    public void depositar(double valor) {
-        if (valor > 0) {
-            saldo += valor;
-            System.out.println("Depósito de R$" + valor + " realizado com sucesso. Novo saldo: R$" + saldo);
-        } else {
-            System.out.println("Valor de depósito inválido. O valor deve ser maior que zero.");
-        }
+    public void exibirInformacoes() {
+        System.out.println("Titular: " + titular);
+        System.out.println("Saldo: R$" + saldo);
     }
+}
 
-    private boolean validarEmail(String email) {
-        return email != null && email.contains("@") && email.contains(".");
+class ContaCorrente extends Conta implements OperacoesBancarias {
+    private double taxaManutencao;
+
+    public ContaCorrente(String titular, double taxaManutencao) {
+        super(titular);
+        this.taxaManutencao = taxaManutencao;
     }
 
     @Override
-    public String toString() {
-        return "Nome: " + nome + ", Email: " + email + ", Saldo: R$" + saldo;
+    public void depositar(double valor) {
+        super.getSaldo();
+        super.exibirInformacoes();
+        System.out.println("Depositando R$" + valor + " na conta corrente de " + super.getTitular());
+        super.saldo += valor;
+        super.exibirInformacoes();
     }
 
-    public boolean autenticar(String senha) {
-        return this.senha.equals(senha);
+    @Override
+    public void sacar(double valor) {
+        super.getSaldo();
+        super.exibirInformacoes();
+        if (super.getSaldo() - valor >= 0) {
+            System.out.println("Sacando R$" + valor + " da conta corrente de " + super.getTitular());
+            super.saldo -= valor;
+        } else {
+            System.out.println("Saldo insuficiente para saque.");
+        }
+        super.exibirInformacoes();
+    }
+
+    @Override
+    public double consultarSaldo() {
+        System.out.println("Saldo atual da conta corrente de " + super.getTitular() + ": R$" + super.getSaldo());
+        return super.getSaldo();
     }
 }
 
-class Cadastro {
-    private List<Usuario> usuarios;
+class ContaPoupanca extends Conta implements OperacoesBancarias {
+    private double taxaRendimento;
 
-    public Cadastro() {
-        this.usuarios = new ArrayList<>();
+    public ContaPoupanca(String titular, double taxaRendimento) {
+        super(titular);
+        this.taxaRendimento = taxaRendimento;
     }
 
-    public void cadastrarUsuario(String nome, String email, String senha) {
-        try {
-            Usuario usuario = new Usuario(nome, email, senha);
-            if (!usuarioJaCadastrado(usuario.getEmail())) {
-                usuarios.add(usuario);
-                System.out.println("Usuário cadastrado com sucesso!");
-            } else {
-                System.out.println("Este e-mail já está cadastrado. Utilize outro e-mail.");
-            }
-        } catch (IllegalArgumentException e) {
-            System.out.println("Cadastro não realizado. " + e.getMessage());
+    @Override
+    public void depositar(double valor) {
+        super.getSaldo();
+        super.exibirInformacoes();
+        System.out.println("Depositando R$" + valor + " na conta poupança de " + super.getTitular());
+        super.saldo += valor;
+        super.exibirInformacoes();
+    }
+
+    @Override
+    public void sacar(double valor) {
+        super.getSaldo();
+        super.exibirInformacoes();
+        if (super.getSaldo() - valor >= 0) {
+            System.out.println("Sacando R$" + valor + " da conta poupança de " + super.getTitular());
+            super.saldo -= valor;
+        } else {
+            System.out.println("Saldo insuficiente para saque.");
         }
+        super.exibirInformacoes();
     }
 
-    private boolean usuarioJaCadastrado(String email) {
-        return usuarios.stream().anyMatch(u -> u.getEmail().equals(email));
+    @Override
+    public double consultarSaldo() {
+        System.out.println("Saldo atual da conta poupança de " + super.getTitular() + ": R$" + super.getSaldo());
+        return super.getSaldo();
     }
 
-    public Usuario autenticarUsuario(String email, String senha) {
-        for (Usuario usuario : usuarios) {
-            if (usuario.getEmail().equals(email) && usuario.autenticar(senha)) {
+    public void calcularRendimento() {
+        double rendimento = super.getSaldo() * taxaRendimento;
+        super.saldo += rendimento;
+        System.out.println("Rendimento da poupança de " + super.getTitular() + ": R$" + rendimento);
+        super.exibirInformacoes();
+    }
+}
+
+class Usuario {
+    private String nomeUsuario;
+    private String senha;
+    private Conta conta;
+
+    public Usuario(String nomeUsuario, String senha) {
+        this.nomeUsuario = nomeUsuario;
+        this.senha = senha;
+    }
+
+    public String getNomeUsuario() {
+        return nomeUsuario;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public Conta getConta() {
+        return conta;
+    }
+
+    public void setConta(Conta conta) {
+        this.conta = conta;
+    }
+}
+
+class CadastroUsuario {
+    private static List<Usuario> usuariosCadastrados = new ArrayList<>();
+
+    public static void cadastrarNovoUsuario(String nomeUsuario, String senha) {
+        Usuario novoUsuario = new Usuario(nomeUsuario, senha);
+        usuariosCadastrados.add(novoUsuario);
+        System.out.println("Usuário cadastrado com sucesso!");
+    }
+
+    public static Usuario realizarLogin(String nomeUsuario, String senha) {
+        for (Usuario usuario : usuariosCadastrados) {
+            if (usuario.getNomeUsuario().equals(nomeUsuario) && usuario.getSenha().equals(senha)) {
+                System.out.println("Login bem-sucedido. Bem-vindo, " + nomeUsuario + "!");
                 return usuario;
             }
         }
+
+        System.out.println("Falha no login. Verifique seu nome de usuário e senha.");
         return null;
-    }
-
-    public void depositarDinheiro(Usuario usuario, double valor) {
-        if (usuario != null) {
-            usuario.depositar(valor);
-        } else {
-            System.out.println("Usuário não encontrado. Verifique o e-mail e a senha.");
-        }
-    }
-
-    public void exibirUsuarios() {
-        if (usuarios.isEmpty()) {
-            System.out.println("Nenhum usuário cadastrado.");
-        } else {
-            System.out.println("Lista de usuários cadastrados:");
-            for (Usuario usuario : usuarios) {
-                System.out.println(usuario);
-            }
-        }
     }
 }
 
-public class SistemaCadastro {
+public class SistemaBanco {
     public static void main(String[] args) {
-        Cadastro cadastro = new Cadastro();
         Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Digite seu nome de usuário: ");
+        String novoUsuario = scanner.nextLine();
+        System.out.print("Digite sua senha: ");
+        String novaSenha = scanner.nextLine();
+        cadastrarNovoUsuario(novoUsuario, novaSenha);
+
+        System.out.print("Digite seu nome de usuário para login: ");
+        String nomeUsuario = scanner.nextLine();
+        System.out.print("Digite sua senha para login: ");
+        String senha = scanner.nextLine();
+        Usuario usuarioLogado = realizarLogin(nomeUsuario, senha);
+
+        if (usuarioLogado != null) {
+            realizarOperacoesBancarias(usuarioLogado, scanner);
+        }
+    }
+
+    private static void cadastrarNovoUsuario(String nomeUsuario, String senha) {
+        CadastroUsuario.cadastrarNovoUsuario(nomeUsuario, senha);
+    }
+
+    private static Usuario realizarLogin(String nomeUsuario, String senha) {
+        return CadastroUsuario.realizarLogin(nomeUsuario, senha);
+    }
+
+    private static void realizarOperacoesBancarias(Usuario usuario, Scanner scanner) {
+        System.out.println("Operações bancárias disponíveis para " + usuario.getNomeUsuario());
+
+        ContaCorrente contaCorrente = new ContaCorrente(usuario.getNomeUsuario(), 10.0);
+        usuario.setConta(contaCorrente);
 
         while (true) {
             System.out.println("\nEscolha uma opção:");
-            System.out.println("1. Cadastrar usuário");
-            System.out.println("2. Autenticar usuário");
-            System.out.println("3. Depositar dinheiro");
-            System.out.println("4. Exibir usuários cadastrados");
-            System.out.println("5. Sair");
+            System.out.println("1 - Depositar");
+            System.out.println("2 - Sacar");
+            System.out.println("3 - Consultar Saldo");
+            System.out.println("4 - Sair");
 
-            int opcao = scanner.nextInt();
+            int escolha = scanner.nextInt();
+            double valor;
 
-            switch (opcao) {
+            switch (escolha) {
                 case 1:
-                    System.out.print("Digite o nome do usuário: ");
-                    String nomeCadastro = scanner.next();
-                    System.out.print("Digite o email do usuário: ");
-                    String emailCadastro = scanner.next();
-                    System.out.print("Digite a senha do usuário: ");
-                    String senhaCadastro = scanner.next();
-                    cadastro.cadastrarUsuario(nomeCadastro, emailCadastro, senhaCadastro);
+                    System.out.print("Digite o valor a ser depositado: ");
+                    valor = scanner.nextDouble();
+                    contaCorrente.depositar(valor);
                     break;
                 case 2:
-                    System.out.print("Digite o email do usuário: ");
-                    String emailAutenticacao = scanner.next();
-                    System.out.print("Digite a senha do usuário: ");
-                    String senhaAutenticacao = scanner.next();
-                    Usuario usuarioAutenticado = cadastro.autenticarUsuario(emailAutenticacao, senhaAutenticacao);
-                    if (usuarioAutenticado != null) {
-                        System.out.println("Usuário autenticado: " + usuarioAutenticado.getNome());
-                    } else {
-                        System.out.println("Autenticação falhou. Verifique o e-mail e a senha.");
-                    }
+                    System.out.print("Digite o valor a ser sacado: ");
+                    valor = scanner.nextDouble();
+                    contaCorrente.sacar(valor);
                     break;
                 case 3:
-                    System.out.print("Digite o email do usuário: ");
-                    String emailDeposito = scanner.next();
-                    System.out.print("Digite a senha do usuário: ");
-                    String senhaDeposito = scanner.next();
-                    Usuario usuarioDeposito = cadastro.autenticarUsuario(emailDeposito, senhaDeposito);
-                    if (usuarioDeposito != null) {
-                        System.out.print("Digite o valor a depositar: R$");
-                        double valorDeposito = scanner.nextDouble();
-                        cadastro.depositarDinheiro(usuarioDeposito, valorDeposito);
-                    } else {
-                        System.out.println("Depósito falhou. Verifique o e-mail e a senha.");
-                    }
+                    contaCorrente.consultarSaldo();
                     break;
                 case 4:
-                    cadastro.exibirUsuarios();
-                    break;
-                case 5:
-                    System.out.println("Saindo do sistema.");
+                    System.out.println("Sessão encerrada. Obrigado por utilizar nosso sistema.");
                     System.exit(0);
                 default:
                     System.out.println("Opção inválida. Tente novamente.");
